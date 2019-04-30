@@ -1,7 +1,10 @@
 body{
    font-family: 'Calibri';
-}
-h1 {
-    color:#160C28;
+   color:#FFFFFF;
+   background-color: #160C28;
     text-align: center;
+    font-size: 50px;
+}
+#answer, #multAnswer, #subAnswer{
+    color: #EFCB68;
 }
