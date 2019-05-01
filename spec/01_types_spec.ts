@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 describe('variable and constants and stuff', () => {
     it('union a type', () => {
         let x: number | string;
@@ -232,5 +234,220 @@ describe('array literals', () => {
                 console.log(add(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
             });
         });
+    });
+});
+describe('higher order functions', () => {
+    it('a simple example', () => {
+        type StringDecorator = (x: string) => string;
+        const Identity: StringDecorator = (n) => n;
+
+        function formatName(first: string, last: string, fn: StringDecorator = Identity) {
+            return fn(`${last}, ${first}`);
+        }
+
+        expect(formatName('Luke', 'Skywalker')).toBe('Skywalker, Luke');
+
+        expect(formatName('Han', 'Solo', paddItOut)).toBe('     Solo, Han     ');
+
+        expect(formatName('Ben', 'Solo', (n) => '%%%' + n)).toBe('%%%Solo, Ben');
+
+        function paddItOut(s: string) {
+            return '     ' + s + '     ';
+        }
+        console.log(formatName('Kylo', 'Ren', (n) => '%%%' + n));
+
+        console.log([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(number => number * 2));
+    });
+});
+describe('tag maker', () => {
+    it('using a standard function', () => {
+        // <h1> Content </h1>
+
+        function tagMaker(tag: string, content: string) {
+            return `<${tag}>${content}</${tag}>`;
+        }
+        expect(tagMaker('h1', 'Title')).toBe('<h1>Title</h1>');
+    });
+    it('an oop tagmaker', () => {
+        class TagMaker {
+            private tag: string;
+            constructor(tag: string) {
+                this.tag = tag;
+            }
+            make(content: string) {
+                return `<${this.tag}>${content}</${this.tag}>`;
+            }
+        }
+
+        const h1Maker = new TagMaker('h1');
+        expect(h1Maker.make('Content')).toBe('<h1>Content</h1>');
+        expect(h1Maker.make('Taco Salad')).toBe('<h1>Taco Salad</h1>');
+
+    });
+    it('as a higher-order function', () => {
+        function tagMaker(tag: string): (content: string) => string {
+            return (content: string) => `<${tag}>${content}</${tag}>`;;
+        }
+
+        const h1Maker = tagMaker('h1');
+        const pMaker = tagMaker('p');
+
+        expect(h1Maker('Content')).toBe('<h1>Content</h1>');
+        expect(pMaker('Stuff')).toBe('<p>Stuff</p>');
+    });
+});
+describe('Array Methods', () => {
+    let numbers: number[];
+
+    beforeEach(() => {
+        numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    });
+
+    it('has a foreach', () => {
+        numbers.forEach((element, index, collection) => console.log({ element, index, collection }));
+
+        // for (let element of numbers) {
+        //     console.log(element);
+        // }
+    });
+});
+
+describe('methods that create a brand new array', () => {
+
+    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    it('map creates a new array based on the input from the sorce array', () => {
+
+        const double = numbers.map(n => n * 2);
+        expect(double).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18]);
+    });
+
+    it('filter returns a new array with the elements that have passed the predicate', () => {
+        const isEven = (n: number) => n % 2 === 0;
+        const evens = numbers.filter(isEven);
+
+        expect(evens).toEqual([2, 4, 6, 8]);
+
+        const doubledEvens = numbers
+            .filter(isEven)
+            .map(n => n * 2);
+
+        expect(doubledEvens).toEqual([4, 8, 12, 16]);
+    });
+
+    it('practice', () => {
+        interface Vehicle {
+            vin: string;
+            makeAndModel: string;
+            mileage: number;
+        }
+        const vehicles: Vehicle[] = [
+            { vin: '9999', makeAndModel: 'Chevy Tahoe', mileage: 182000 },
+            { vin: 'aka92', makeAndModel: 'Toyota Prius', mileage: 89999 },
+            { vin: 'kduwi', makeAndModel: 'Ford Explorer', mileage: 99998 }
+        ];
+
+        // Your Code Here lowMileageVehicles < 100_000
+
+        const lowMileageVehicles = vehicles
+            .filter(v => v.mileage < 100_000)
+            .map(v => v.makeAndModel);
+
+
+        expect(lowMileageVehicles).toEqual(['Toyota Prius', 'Ford Explorer']);
+    });
+    it('reduce', () => {
+        let answer = numbers.reduce((s, n) => s + n);
+        expect(answer).toBe(45);
+
+        answer = numbers.reduce((s, n, ) => s + n, 100); //s = state n = next and 100 sets the first state
+        expect(answer).toBe(145);
+
+    });
+
+    it('a far out weird example of using reduce.', () => {
+
+
+        interface State {
+            count: number;
+        }
+
+        const initialState: State = {
+            count: 0
+        }
+
+        /*
+            We can do three different things to this state.
+            We can increment it. (+1)
+            We can decrement it. (-1)
+            We can reset it (make it back to what it was at the beginning)
+        */
+        interface Action {
+            type: string;
+        }
+
+        class Increment implements Action {
+            readonly type = 'INCREMENT';
+        }
+
+        class Decrement implements Action {
+            readonly type = 'DECREMENT';
+        }
+
+        class Reset implements Action {
+            readonly type = 'RESET';
+        }
+
+        class SetAt implements Action {
+            readonly type = 'SET';
+
+
+            constructor(public value: number) { }
+        }
+
+        const userActions: Action[] = [
+            new Increment(),
+            new Decrement(),
+            new Increment(),
+            new Increment(),
+            new Increment(),
+            new Reset(),
+            new Increment(),
+            new SetAt(100),
+            new Increment(),
+            new Increment(),
+            new Decrement()
+        ];
+
+        type allActions = Reset | Increment | Decrement | SetAt; //discriminated union - action.value wouldn't be available without this
+
+        const endState = userActions.reduce((state: State, action: allActions): State => {
+            switch (action.type) {
+                case 'SET': {
+                    return {
+                        count: action.value
+                    }
+                }
+                case 'INCREMENT': {
+                    return {
+                        count: state.count + 1
+                    }
+                }
+                case 'DECREMENT': {
+                    return {
+                        count: state.count - 1
+                    }
+                }
+                case 'RESET': {
+                    return {
+                        count: 0
+                    }
+                }
+            }
+        }, initialState)
+
+        expect(endState.count).toBe(101);
+
+
     });
 });
